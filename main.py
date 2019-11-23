@@ -18,6 +18,12 @@ def isValidIP(ip):
 def isValidMac(mac):
     return re.match(r"^\s*([0-9a-fA-F]{2,2}:){5,5}[0-9a-fA-F]{2,2}\s*$", mac)
 
+def isMulticastMac(mac):
+    return int(mac[0:2],16) & 1
+
+def isMulticastIP(ip):
+    return int(ip[0:3]) >= 224
+
 def get_netcard():
     netcard_info = []
     for iface_name in sorted(IFACES.data):
@@ -126,12 +132,20 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
             if self.cbxSrcMac.checkState() and isValidMac(srcMac):
                 pkt["Ether"].src = srcMac
             if self.cbxDstMac.checkState() and isValidMac(dstMac):
-                pkt["Ether"].dst = dstMac
+                if self.cboxNoChangeBroad.checkState():
+                    if not isMulticastMac(pkt["Ether"].dst):
+                        pkt["Ether"].dst = dstMac 
+                else:
+                    pkt["Ether"].dst = dstMac 
             if pkt.haslayer("IP"):
                 if self.cbxSrcIP.checkState() and isValidIP(srcIP):
                     pkt["IP"].src = srcIP
                 if self.cbxDstIP.checkState() and isValidIP(dstIP):
-                    pkt["IP"].dst = dstIP
+                    if self.cboxNoChangeBroad.checkState():
+                        if not isMulticastIP(pkt["IP"].dst):
+                            pkt["IP"].dst = dstIP
+                        else:
+                            pkt["IP"].dst = dstIP
             PktList.append(pkt)
         return PktList
 
