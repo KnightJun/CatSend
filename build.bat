@@ -1,2 +1,2 @@
-pyinstaller -D -F -n sendpkt -w ./main.py -i ./icon.ico
-move .\dist\sendpkt.exe .\
+pyinstaller -D -n CatSend -w ./main.py -i ./icon.ico
+

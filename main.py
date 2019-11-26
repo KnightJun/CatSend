@@ -6,11 +6,15 @@ import os
 import re
 import time
 from main_ui import Ui_MainWindow
-from PyQt5 import QtWidgets, QtCore, QtGui
-from scapy.error import Scapy_Exception
-from scapy.all import IFACES,sendp
-from scapy.config import conf
-from scapy.utils import PcapReader, rdpcap
+from load_ui import Ui_LoadWindow
+from PyQt5 import QtWidgets, QtCore, QtGui,Qt
+
+def loadScapy():
+    global Scapy_Exception,IFACES,sendp,conf,PcapReader, rdpcap
+    from scapy.error import Scapy_Exception
+    from scapy.all import IFACES,sendp
+    from scapy.config import conf
+    from scapy.utils import PcapReader, rdpcap
 
 def isValidIP(ip):
     return re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", ip)
@@ -45,16 +49,28 @@ def get_packetList():
             print("./packets/" + filename + ".pcap", identifier)
     return packetList
 
+class load_Form(QtWidgets.QMainWindow, Ui_LoadWindow):
+    def __init__(self):
+        super(QtWidgets.QMainWindow, self).__init__()
+        super(Ui_LoadWindow, self).__init__()
+        self.setupUi(self)
+        self.setWindowFlags(Qt.Qt.FramelessWindowHint)
+        self.startTimer(500, timerType = QtCore.Qt.VeryCoarseTimer)
+
+    def timerEvent(self, event):
+        loadScapy()
+        self.close()
+
 class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(QtWidgets.QMainWindow, self).__init__()
         super(Ui_MainWindow, self).__init__()
+        self.setupUi(self)
         self.netcardList = get_netcard()
         self.pktItems = []
         self.isSending = False
         self.shouldStop = False
         self.packetList = get_packetList()
-        self.setupUi(self)
         self.cmbNetCard.clear()
         self.cmbNetCard.addItems([ "%-16s%s" % (x[1], x[0]) for x in self.netcardList])
         for pktname in self.packetList.keys():
@@ -183,6 +199,9 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+    lf = load_Form()
+    lf.show()
+    app.exec_()
     my_pyqt_form = main_Form()
     my_pyqt_form.show()
-    sys.exit(app.exec_())
+    app.exec_()

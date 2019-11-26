@@ -139,7 +139,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "发包工具"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "CatSend"))
         self.btnCheckAll.setText(_translate("MainWindow", "全选"))
         self.groupBox.setTitle(_translate("MainWindow", "发包设置"))
         self.edtInter.setText(_translate("MainWindow", "0"))
