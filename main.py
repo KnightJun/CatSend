@@ -124,13 +124,15 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
     def on_btnCheckAll_clicked(self, isbool = None):
         if isbool == None:
             return
-        [item.setCheckState(QtCore.Qt.Checked) for item in self.pktItems]
+        [item[1].setCheckState(QtCore.Qt.Checked) for item in self.pktItems if not item[1].isHidden()]
             
     def on_btnCheckInv_clicked(self, isbool = None):
         if isbool == None:
             return
         for item in self.pktItems:
-            item.setCheckState(QtCore.Qt.Unchecked if item.checkState() else QtCore.Qt.Checked)
+            if not item[1].isHidden():
+                item = item[1]
+                item.setCheckState(QtCore.Qt.Unchecked if item.checkState() else QtCore.Qt.Checked)
 
     def on_edtFilter_textChanged(self, text):
         [item[1].setHidden(bool(text and text not in item[0])) for item in self.pktItems]
