@@ -104,6 +104,9 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.btnSend.text() == "停止发包":
             self.shouldStop = True
             self.btnSend.setText("开始发包")
+            if self.cboxRepeat.checkState():
+                self.SendProgress.setMaximum(1)
+                self.SendProgress.setValue(0)
             return
         self.btnSend.setText("停止发包")
         self.sendPackets()
@@ -176,6 +179,10 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
         sendInvterval = int(self.edtInter.text()) / 1000 if self.edtInter.text().isdigit() else 0
         sendLoop = int(self.edtLoop.text()) if self.edtLoop.text().isdigit() else 1
         self.SendProgress.setMaximum(sendLoop)
+        if self.cboxRepeat.checkState():
+            self.SendProgress.setMaximum(0)
+            self.SendProgress.setValue(0)
+            sendLoop = sys.maxsize
         now_time = time.time()
         old_time = now_time
         pktCount = 0
@@ -193,7 +200,8 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.lblSendStatus.setText("已发:%d  %d/s" % (pktCount, pktRate))
                 if self.shouldStop:
                     break
-            self.SendProgress.setValue(loopInx + 1)
+            if not self.cboxRepeat.checkState():
+                self.SendProgress.setValue(loopInx + 1)
             if self.shouldStop:
                 break
         self.isSending = False
