@@ -38,17 +38,6 @@ def get_netcard():
         netcard_info.append([str(dev.name), str(dev.ip), dev.mac])
     return netcard_info
 
-def get_packetList():
-    packetList = {}
-    list_dir = [x[:-5] for x in os.listdir("./packets") if x[-5:] == ".pcap"]
-    for filename in list_dir:
-        try:
-            packets = rdpcap("./packets/" + filename + ".pcap")
-            packetList[filename] = packets[0]
-        except Scapy_Exception as identifier:
-            print("./packets/" + filename + ".pcap", identifier)
-    return packetList
-
 class load_Form(QtWidgets.QMainWindow, Ui_LoadWindow):
     def __init__(self):
         super(QtWidgets.QMainWindow, self).__init__()
@@ -70,9 +59,24 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pktItems = []
         self.isSending = False
         self.shouldStop = False
-        self.packetList = get_packetList()
+        self.on_btnReload_clicked()
         self.cmbNetCard.clear()
         self.cmbNetCard.addItems([ "%-16s%s" % (x[1], x[0]) for x in self.netcardList])
+        
+
+    def on_btnReload_clicked(self, isbool = None):
+        if isbool != None:
+            return
+        self.packetList = {}
+        self.pktItems.clear()
+        list_dir = [x[:-5] for x in os.listdir("./packets") if x[-5:] == ".pcap"]
+        for filename in list_dir:
+            try:
+                packets = rdpcap("./packets/" + filename + ".pcap")
+                self.packetList[filename] = packets[0]
+            except Scapy_Exception as identifier:
+                print("./packets/" + filename + ".pcap", identifier)
+        
         for pktname in self.packetList.keys():
             item = QtWidgets.QListWidgetItem(pktname)
             item.setCheckState(QtCore.Qt.Checked)
@@ -80,13 +84,15 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
             self.pktItems.append((pktname, item))
         self.listPkt.clear()
         [self.listPkt.addItem(item[1]) for item in self.pktItems]
-        
+        self.on_listPkt_itemChanged(None)
+        return
 
     def on_listPkt_currentItemChanged(self, item : QtWidgets.QListWidgetItem, item_pre : QtWidgets.QListWidgetItem):
-        p = (self.packetList[item.text()])
-        self.edtInfo.setText("Packet Size:%d\n%s" % (len(p), p.show(dump=True)))
+        if item:
+            p = (self.packetList[item.text()])
+            self.edtInfo.setText("Packet Size:%d\n%s" % (len(p), p.show(dump=True)))
 
-    def on_listPkt_itemChanged(self, item : QtWidgets.QListWidgetItem):
+    def on_listPkt_itemChanged(self, item):
         self.lblCount.setText("已选%d/%d" % (len([ pkt for pkt in self.pktItems if pkt[1].checkState() ]), len(self.pktItems)))
 
     def on_btnGetNCMac_clicked(self, isbool = None):
