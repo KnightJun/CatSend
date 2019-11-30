@@ -38,6 +38,11 @@ def get_netcard():
         netcard_info.append([str(dev.name), str(dev.ip), dev.mac])
     return netcard_info
 
+qtsleep_eveloop = QtCore.QEventLoop()
+def qtsleep(sleep_ms):
+    QtCore.QTimer().singleShot(sleep_ms, qtsleep_eveloop.quit)
+    qtsleep_eveloop.exec()
+
 class load_Form(QtWidgets.QMainWindow, Ui_LoadWindow):
     def __init__(self):
         super(QtWidgets.QMainWindow, self).__init__()
@@ -182,7 +187,7 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
         PktList = self.constructPacketList()
         sendNetcard = self.netcardList[self.cmbNetCard.currentIndex()][0]
         socket = conf.L2socket(iface=sendNetcard)
-        sendInvterval = int(self.edtInter.text()) / 1000 if self.edtInter.text().isdigit() else 0
+        sendInvterval = int(self.edtInter.text()) if self.edtInter.text().isdigit() else 0
         sendLoop = int(self.edtLoop.text()) if self.edtLoop.text().isdigit() else 1
         self.SendProgress.setMaximum(sendLoop)
         if self.cboxRepeat.checkState():
@@ -194,15 +199,18 @@ class main_Form(QtWidgets.QMainWindow, Ui_MainWindow):
         pktCount = 0
         old_pktCount = pktCount
         pktRate = 0
+        time_count = 0
         for loopInx in range(sendLoop):
             QtWidgets.QApplication.processEvents()
             for pkt in PktList:
                 socket.send(pkt)
                 pktCount += 1
-                time.sleep(sendInvterval)
-                if pktCount % 100 == 0:
+                qtsleep(sendInvterval)
+                if time_count > 1000:
                     now_time = time.time()
                     pktRate = int((pktCount - old_pktCount) / (now_time - old_time))
+                    time_count = 0
+                time_count += sendInvterval
                 self.lblSendStatus.setText("已发:%d  %d/s" % (pktCount, pktRate))
                 if self.shouldStop:
                     break
